@@ -82,6 +82,7 @@ async def persist_plan(
             estimated_minutes=int(day.get("estimated_minutes", 60)),
         )
         db.add(workout)
+        await db.flush()
 
         for sort_order, ex in enumerate(day.get("exercises") or []):
             exercise_name = str(ex.get("name", "Exercício"))
