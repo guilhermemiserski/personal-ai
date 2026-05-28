@@ -12,6 +12,7 @@ from app.models.training import PlannedWorkout, TrainingPlan, WorkoutSession
 from app.models.user import User
 from app.schemas.plan import ExerciseOut, PlanSummary, WorkoutOut
 from app.services.exercise_media import backfill_user_active_plan
+from app.services.plan_utils import normalize_alternatives
 from app.services.workout_completion import get_completed_session_this_week
 
 router = APIRouter(prefix="/me", tags=["plans"])
@@ -33,7 +34,7 @@ def build_plan_summary(plan: TrainingPlan) -> PlanSummary:
                 instructions=ex.instructions,
                 video_url=ex.video_url,
                 image_url=ex.image_url,
-                alternatives=ex.alternatives,
+                alternatives=normalize_alternatives(ex.alternatives),
             )
             for ex in sorted(workout.exercises, key=lambda e: e.sort_order)
         ]

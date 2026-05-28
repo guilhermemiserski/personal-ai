@@ -1,5 +1,7 @@
 from typing import Any
 
+from app.services.plan_utils import normalize_alternatives
+
 
 class PlanValidationError(Exception):
     def __init__(self, message: str) -> None:
@@ -42,6 +44,6 @@ def validate_plan(plan: dict[str, Any], days_per_week: int, session_minutes: int
         for ex in exercises:
             if not ex.get("name"):
                 raise PlanValidationError("Exercício sem nome.")
-            alts = ex.get("alternatives") or []
+            alts = normalize_alternatives(ex.get("alternatives")) or []
             if len(alts) < 1:
                 raise PlanValidationError(f"Exercício '{ex.get('name')}' precisa de alternativas.")

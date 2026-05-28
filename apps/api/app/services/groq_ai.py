@@ -87,7 +87,7 @@ class GroqPlanService:
             "CONSTRAINTS OBRIGATÓRIAS:\n"
             "- Respeite totalmente session_duration_minutes e days_per_week.\n"
             "- Para cada dia, gere no mínimo 4 exercícios (3 se duration <= 35).\n"
-            "- Cada exercício precisa de alternatives com pelo menos 1 item.\n\n"
+            "- Cada exercício precisa de alternatives com pelo menos 1 item (array de strings, ex.: [\"Leg press\"]).\n\n"
             "Gere a semana 1 do plano no schema: "
             '{"program_name","weekly_split","rationale","weeks":[{"week_number":1,"days":'
             '[{"day_label","estimated_minutes","exercises":[{"name","muscle_group","sets",'

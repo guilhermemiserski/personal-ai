@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.training import PlannedExercise, PlannedWorkout, TrainingPlan
 from app.services.exercise_image_resolver import resolve_exercise_image_url
+from app.services.plan_utils import normalize_alternatives
 from app.services.wger import wger_client
 
 VIDEO_FALLBACKS: dict[str, str] = {
@@ -120,7 +121,7 @@ async def persist_plan(
                     video_url=video_url,
                     image_url=image_url,
                     wger_exercise_id=wger_meta.get("wger_id") if wger_meta else None,
-                    alternatives=ex.get("alternatives"),
+                    alternatives=normalize_alternatives(ex.get("alternatives")),
                 )
             )
 
