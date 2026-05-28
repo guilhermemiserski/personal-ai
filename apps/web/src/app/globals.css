@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.55) rgba(15, 23, 42, 0.35);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.35);
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.85), rgba(59, 130, 246, 0.55));
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(96, 165, 250, 0.95), rgba(59, 130, 246, 0.7));
+}
+
+body {
+  @apply bg-surface text-slate-100 antialiased min-h-screen;
+  background-image: radial-gradient(1200px 600px at 20% -10%, rgba(59, 130, 246, 0.15), transparent 40%),
+    radial-gradient(1000px 500px at 100% 0%, rgba(16, 185, 129, 0.08), transparent 30%);
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  @apply w-full rounded-xl border border-surface-border bg-surface-muted px-3 py-2.5 text-sm text-slate-100 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/20;
+}
+
+select {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: linear-gradient(45deg, transparent 50%, #93c5fd 50%),
+    linear-gradient(135deg, #93c5fd 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+input[type="checkbox"] {
+  @apply h-4 w-4 rounded border border-surface-border bg-surface-muted accent-accent outline-none transition focus:ring-2 focus:ring-accent/30;
+}
+
+.primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border border-blue-400/35 bg-gradient-to-r from-blue-500 to-blue-400 px-4 py-2.5 font-semibold text-white shadow-lg shadow-blue-500/20 transition duration-200 hover:-translate-y-0.5 hover:from-blue-400 hover:to-blue-300 hover:shadow-blue-400/30 disabled:cursor-not-allowed disabled:opacity-55;
+}
+
+button.primary:active,
+a.primary:active {
+  transform: translateY(0);
+}
+
+button.secondary {
+  @apply rounded-xl border border-surface-border bg-surface-card px-4 py-2.5 text-sm text-slate-200 transition hover:border-accent;
+}
+
+.back-link {
+  @apply inline-flex items-center gap-1 rounded-full border border-surface-border bg-surface-card/90 px-2.5 py-1 text-xs font-medium text-accent transition hover:border-accent hover:bg-surface-muted;
+}
+
+.app-container {
+  @apply mx-auto min-h-screen max-w-3xl px-4 pb-24 pt-5;
+}
+
+.panel {
+  @apply rounded-2xl border border-surface-border bg-surface-card p-4 shadow-lg shadow-black/10;
+}
+
+.panel-title {
+  @apply text-base font-semibold text-slate-100;
+
+}
+
+.subtle {
+  @apply text-sm text-slate-400;
+}
+
+.horizontal-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.35rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.55) transparent;
+}
+
+.horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.55);
+}
+
+.horizontal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

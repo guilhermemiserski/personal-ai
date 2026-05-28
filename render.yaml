@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: personal-ai-api
+    runtime: docker
+    plan: free
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GROQ_FALLBACK_MODEL
+        value: llama-3.1-8b-instant
+      - key: GROQ_REQUEST_TIMEOUT_SECONDS
+        value: "22"
+      - key: CORS_ORIGINS
+        sync: false
+      - key: WGER_BASE_URL
+        value: https://wger.de
+      - key: WGER_LANGUAGE_ID
+        value: "7"
+
+  - type: web
+    name: personal-ai-web
+    runtime: node
+    plan: free
+    rootDir: apps/web
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false

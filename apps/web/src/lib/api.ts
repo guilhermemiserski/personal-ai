@@ -1,0 +1,172 @@
+import { clearToken, getToken } from "./auth";
+import type {
+  AchievementItem,
+  BodyMetricInput,
+  CoachMessage,
+  NotificationItem,
+  PlanSummary,
+  Profile,
+  ProgressSummary,
+  Session,
+  SessionExerciseLogInput,
+  TokenResponse,
+  UserMe,
+  Workout,
+} from "./types";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+const REQUEST_TIMEOUT_MS = 20_000;
+
+interface ApiRequestOptions extends RequestInit {
+  timeoutMs?: number;
+}
+
+async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const token = getToken();
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+    ...(options.headers ?? {}),
+  };
+  if (token) {
+    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+  }
+
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const signal = options.signal ?? controller.signal;
+  const { timeoutMs: _timeoutMs, ...requestOptions } = options;
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, { ...requestOptions, headers, signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new ApiError(408, "A API demorou demais para responder. Tente novamente.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { detail?: string };
+    let detail = typeof body.detail === "string" ? body.detail : "Erro na requisição";
+    if (response.status === 401 && token) {
+      clearToken();
+      detail = "Sessão expirada. Faça login novamente.";
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname;
+        if (path !== "/login" && path !== "/register") {
+          window.location.replace("/login");
+        }
+      }
+    }
+    throw new ApiError(response.status, detail);
+  }
+  if (response.status === 204) {
+    return undefined as T;
+  }
+  return response.json() as Promise<T>;
+}
+
+export const api = {
+  register: (email: string, password: string, display_name?: string) =>
+    request<TokenResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password, display_name: display_name || null }),
+    }),
+
+  login: (email: string, password: string) =>
+    request<TokenResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  me: () => request<UserMe>("/auth/me"),
+
+  getProfile: () => request<Profile>("/me/profile"),
+
+  updateProfile: (data: Partial<Profile>) =>
+    request<Profile>("/me/profile", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  completeOnboarding: () =>
+    request<PlanSummary>("/me/onboarding/complete", { method: "POST", timeoutMs: 90_000 }),
+
+  getActivePlan: () => request<PlanSummary>("/me/plan/active"),
+
+  enrichPlanImages: () =>
+    request<{ updated: number }>("/me/plan/enrich-images", { method: "POST" }),
+
+  getTodayWorkout: () => request<Workout | null>("/me/workouts/today"),
+
+  getWorkoutById: (id: string) => request<Workout>(`/me/workouts/${id}`),
+
+  startSession: (planned_workout_id: string) =>
+    request<Session>("/me/sessions", {
+      method: "POST",
+      body: JSON.stringify({ planned_workout_id }),
+    }),
+
+  updateSession: (sessionId: string, exercise_logs: SessionExerciseLogInput[]) =>
+    request<Session>(`/me/sessions/${sessionId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ exercise_logs }),
+    }),
+
+  finishSessionFeedback: (
+    sessionId: string,
+    payload: {
+      completed: boolean;
+      perceived_effort: number;
+      energy_level: number;
+      soreness_level: number;
+      difficulty_level: number;
+      notes?: string;
+    },
+  ) =>
+    request<Session>(`/me/sessions/${sessionId}/feedback`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
+  getProgress: () => request<ProgressSummary>("/me/progress"),
+
+  addMetric: (data: BodyMetricInput) =>
+    request("/me/metrics", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getCoachMessages: () => request<CoachMessage[]>("/me/coach/messages"),
+
+  sendCoachMessage: (message: string) =>
+    request<CoachMessage>("/me/coach/messages", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }),
+
+  getNotifications: () => request<{ notifications: NotificationItem[] }>("/me/notifications"),
+
+  markNotificationRead: (notificationId: string) =>
+    request<NotificationItem>(`/me/notifications/${notificationId}/read`, {
+      method: "PATCH",
+    }),
+
+  markAllNotificationsRead: () =>
+    request<{ updated: number }>("/me/notifications/read-all", { method: "POST" }),
+
+  getAchievements: () => request<{ achievements: AchievementItem[] }>("/me/achievements"),
+};

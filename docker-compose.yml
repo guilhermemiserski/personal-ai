@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: personal_ai
+      POSTGRES_PASSWORD: personal_ai
+      POSTGRES_DB: personal_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U personal_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://personal_ai:personal_ai@postgres:5432/personal_ai
+      JWT_SECRET: dev-secret-change-in-production
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      CORS_ORIGINS: http://localhost:3000
+      WGER_BASE_URL: https://wger.de
+      WGER_LANGUAGE_ID: "7"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./apps/api/app:/app/app
+      - ./docs:/docs:ro
+
+volumes:
+  postgres_data:
