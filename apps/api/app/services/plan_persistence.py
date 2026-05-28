@@ -26,6 +26,18 @@ def _youtube_search_url(exercise_name: str) -> str:
     return f"https://www.youtube.com/results?search_query={query}"
 
 
+def _sanitize_media_url(url: str | None, *, max_len: int = 2048) -> str | None:
+    """Avoid DB overflow; never persist inline data-URI placeholders."""
+    if not url:
+        return None
+    cleaned = url.strip()
+    if cleaned.startswith("data:"):
+        return None
+    if len(cleaned) > max_len:
+        return cleaned[:max_len]
+    return cleaned
+
+
 async def deactivate_user_plans(db: AsyncSession, user_id: uuid.UUID) -> None:
     await db.execute(
         update(TrainingPlan).where(TrainingPlan.user_id == user_id).values(is_active=False)
@@ -77,12 +89,19 @@ async def persist_plan(
             except Exception:
                 wger_meta = None
 
-            image_url = ex.get("image_url")
+            image_url = _sanitize_media_url(ex.get("image_url"))
             if not image_url:
                 try:
-                    image_url = await resolve_exercise_image_url(exercise_name)
+                    image_url = _sanitize_media_url(await resolve_exercise_image_url(exercise_name))
                 except Exception:
                     image_url = None
+
+            video_url = _sanitize_media_url(
+                (wger_meta.get("video_url") if wger_meta else None)
+                or ex.get("video_url")
+                or VIDEO_FALLBACKS.get(exercise_name.lower())
+                or _youtube_search_url(exercise_name)
+            )
 
             db.add(
                 PlannedExercise(
@@ -98,12 +117,7 @@ async def persist_plan(
                     target_rpe=ex.get("target_rpe"),
                     instructions=ex.get("instructions")
                     or (wger_meta.get("instructions") if wger_meta else None),
-                    video_url=(
-                        (wger_meta.get("video_url") if wger_meta else None)
-                        or ex.get("video_url")
-                        or VIDEO_FALLBACKS.get(exercise_name.lower())
-                        or _youtube_search_url(exercise_name)
-                    ),
+                    video_url=video_url,
                     image_url=image_url,
                     wger_exercise_id=wger_meta.get("wger_id") if wger_meta else None,
                     alternatives=ex.get("alternatives"),

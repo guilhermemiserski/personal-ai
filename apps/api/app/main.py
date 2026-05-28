@@ -20,11 +20,27 @@ def _migrate_sqlite_columns(sync_conn) -> None:
         sync_conn.execute(text("ALTER TABLE user_profiles ADD COLUMN display_name VARCHAR(120)"))
 
 
+def _migrate_postgres_columns(sync_conn) -> None:
+    if sync_conn.dialect.name != "postgresql":
+        return
+    inspector = inspect(sync_conn)
+    if "planned_exercises" not in inspector.get_table_names():
+        return
+    column_types = {
+        column["name"]: str(column["type"]).lower() for column in inspector.get_columns("planned_exercises")
+    }
+    if "varchar" in column_types.get("image_url", ""):
+        sync_conn.execute(text("ALTER TABLE planned_exercises ALTER COLUMN image_url TYPE TEXT"))
+    if "varchar" in column_types.get("video_url", ""):
+        sync_conn.execute(text("ALTER TABLE planned_exercises ALTER COLUMN video_url TYPE TEXT"))
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_migrate_sqlite_columns)
+        await conn.run_sync(_migrate_postgres_columns)
     yield
     await engine.dispose()
 

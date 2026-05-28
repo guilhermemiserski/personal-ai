@@ -55,8 +55,8 @@ class PlannedExercise(Base):
     tempo: Mapped[str | None] = mapped_column(String(20), nullable=True)
     target_rpe: Mapped[int | None] = mapped_column(Integer, nullable=True)
     instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
-    video_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    video_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     wger_exercise_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     alternatives: Mapped[list | None] = mapped_column(JsonType, nullable=True)
 
