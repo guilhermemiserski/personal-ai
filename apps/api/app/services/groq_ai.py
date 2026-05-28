@@ -10,13 +10,21 @@ from app.models.training import WorkoutSession
 from app.models.user import UserProfile
 from app.services.plan_validator import PlanValidationError, validate_plan
 
-def _load_rules() -> str:
+def _rule_file_candidates() -> list[Path]:
+    """Build paths lazily — list literals would evaluate parents[N] and crash in Docker."""
+    service_dir = Path(__file__).resolve().parent
     candidates = [
-        Path(__file__).resolve().parent / "data" / "training_rules.md",
-        Path(__file__).resolve().parents[4] / "docs" / "TRAINING_GENERATION_RULES.md",
+        service_dir / "data" / "training_rules.md",
         Path("/docs/TRAINING_GENERATION_RULES.md"),
     ]
-    for path in candidates:
+    repo_root = service_dir.parents[3] if len(service_dir.parents) > 3 else None
+    if repo_root is not None:
+        candidates.append(repo_root / "docs" / "TRAINING_GENERATION_RULES.md")
+    return candidates
+
+
+def _load_rules() -> str:
+    for path in _rule_file_candidates():
         if path.exists():
             # Keep prompt lean to reduce latency/cost while preserving core constraints.
             return path.read_text(encoding="utf-8")[:7000]
