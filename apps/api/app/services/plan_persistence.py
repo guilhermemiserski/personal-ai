@@ -49,6 +49,8 @@ async def persist_plan(
     db: AsyncSession,
     user_id: uuid.UUID,
     plan_data: dict[str, Any],
+    *,
+    enrich_media: bool = False,
 ) -> TrainingPlan:
     await deactivate_user_plans(db, user_id)
 
@@ -80,18 +82,18 @@ async def persist_plan(
             estimated_minutes=int(day.get("estimated_minutes", 60)),
         )
         db.add(workout)
-        await db.flush()
 
         for sort_order, ex in enumerate(day.get("exercises") or []):
             exercise_name = str(ex.get("name", "Exercício"))
             wger_meta: dict[str, Any] | None = None
-            try:
-                wger_meta = await wger_client.find_by_name(exercise_name)
-            except Exception:
-                wger_meta = None
+            if enrich_media:
+                try:
+                    wger_meta = await wger_client.find_by_name(exercise_name)
+                except Exception:
+                    wger_meta = None
 
             image_url = _sanitize_media_url(ex.get("image_url"))
-            if not image_url:
+            if enrich_media and not image_url:
                 try:
                     image_url = _sanitize_media_url(await resolve_exercise_image_url(exercise_name))
                 except Exception:

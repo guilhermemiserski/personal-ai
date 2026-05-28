@@ -95,9 +95,12 @@ class GroqPlanService:
         )
 
         last_error: str | None = None
-        candidate_models: list[str] = [self.model]
-        if settings.groq_fallback_model and settings.groq_fallback_model != self.model:
+        # Fast model first to keep onboarding under frontend timeout.
+        candidate_models: list[str] = []
+        if settings.groq_fallback_model:
             candidate_models.append(settings.groq_fallback_model)
+        if self.model not in candidate_models:
+            candidate_models.append(self.model)
 
         for model_name in candidate_models:
             messages = [

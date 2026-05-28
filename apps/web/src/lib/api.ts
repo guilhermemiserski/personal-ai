@@ -103,7 +103,7 @@ export const api = {
     }),
 
   completeOnboarding: () =>
-    request<PlanSummary>("/me/onboarding/complete", { method: "POST", timeoutMs: 90_000 }),
+    request<PlanSummary>("/me/onboarding/complete", { method: "POST", timeoutMs: 120_000 }),
 
   getActivePlan: () => request<PlanSummary>("/me/plan/active"),
 
