@@ -54,13 +54,20 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
     if (error instanceof Error && error.name === "AbortError") {
       throw new ApiError(408, "A API demorou demais para responder. Tente novamente.");
     }
-    throw error;
+    throw new ApiError(0, "Sem conexão com o servidor. Verifique sua internet.");
   } finally {
     clearTimeout(timeoutId);
   }
   if (!response.ok) {
-    const body = (await response.json().catch(() => ({}))) as { detail?: string };
-    let detail = typeof body.detail === "string" ? body.detail : "Erro na requisição";
+    const body = (await response.json().catch(() => ({}))) as {
+      detail?: string | Array<{ msg?: string }>;
+    };
+    let detail = "Erro na requisição";
+    if (typeof body.detail === "string") {
+      detail = body.detail;
+    } else if (Array.isArray(body.detail) && body.detail.length > 0) {
+      detail = body.detail.map((item) => item.msg).filter(Boolean).join("; ") || detail;
+    }
     if (response.status === 401 && token) {
       clearToken();
       detail = "Sessão expirada. Faça login novamente.";

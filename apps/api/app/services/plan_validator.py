@@ -9,6 +9,13 @@ class PlanValidationError(Exception):
         super().__init__(message)
 
 
+def _safe_int_sets(value: object) -> int:
+    try:
+        return int(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        raise PlanValidationError(f"Séries inválidas: {value!r}") from None
+
+
 def validate_plan(plan: dict[str, Any], days_per_week: int, session_minutes: int) -> None:
     weeks = plan.get("weeks")
     if not weeks or not isinstance(weeks, list):
@@ -35,7 +42,7 @@ def validate_plan(plan: dict[str, Any], days_per_week: int, session_minutes: int
                 f"Mínimo esperado: {min_exercises}."
             )
 
-        total_sets = sum(int(ex.get("sets", 0)) for ex in exercises)
+        total_sets = sum(_safe_int_sets(ex.get("sets", 0)) for ex in exercises)
         if total_sets > cap + 4:
             raise PlanValidationError(
                 f"Dia '{day.get('day_label')}' excede volume para {session_minutes} min ({total_sets} séries)."

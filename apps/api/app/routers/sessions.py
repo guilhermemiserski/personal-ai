@@ -9,7 +9,6 @@ from sqlalchemy.orm import selectinload
 from app.core.deps import get_current_user
 from app.database import get_db
 from app.models.training import (
-    PlannedExercise,
     PlannedWorkout,
     SessionExerciseLog,
     TrainingPlan,
@@ -140,15 +139,10 @@ async def update_session(
     for item in body.exercise_logs:
         log = logs_by_exercise.get(item.planned_exercise_id)
         if log is None:
-            try:
-                peid = uuid.UUID(item.planned_exercise_id)
-            except ValueError as exc:
-                raise HTTPException(status_code=400, detail="planned_exercise_id inválido") from exc
-            exists = await db.execute(select(PlannedExercise.id).where(PlannedExercise.id == peid))
-            if exists.scalar_one_or_none() is None:
-                continue
-            log = SessionExerciseLog(session_id=session.id, planned_exercise_id=peid)
-            db.add(log)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Exercício não pertence a esta sessão: {item.planned_exercise_id}",
+            )
         log.completed_sets = item.completed_sets
         log.completed_reps = item.completed_reps
         log.load_kg = item.load_kg
@@ -177,11 +171,11 @@ async def finish_session_with_feedback(
     session = result.scalar_one_or_none()
     if not session:
         raise HTTPException(status_code=404, detail="Sessão não encontrada")
-
-    was_already_completed = session.completed
+    if session.completed:
+        raise HTTPException(status_code=409, detail="Este treino já foi finalizado.")
 
     session.completed = body.completed
-    session.status = "completed"
+    session.status = "completed" if body.completed else "abandoned"
     session.perceived_effort = body.perceived_effort
     session.energy_level = body.energy_level
     session.soreness_level = body.soreness_level
@@ -190,9 +184,6 @@ async def finish_session_with_feedback(
     if session.finished_at is None:
         session.finished_at = datetime.now(UTC)
     session.adaptation_summary = build_adaptation_summary(session)
-
-    if was_already_completed:
-        raise HTTPException(status_code=409, detail="Este treino já foi finalizado.")
 
     summary_text = session.adaptation_summary or "Seu feedback foi registrado. Bom trabalho!"
     db.add(

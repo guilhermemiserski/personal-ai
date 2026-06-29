@@ -39,10 +39,15 @@ export default function OnboardingPage() {
   const [profileLoading, setProfileLoading] = useState(true);
 
   const saveStep = useCallback(async (patch: DraftProfile) => {
-    const next = { ...draft, ...patch };
-    setDraft(next);
+    const next = await new Promise<DraftProfile>((resolve) => {
+      setDraft((prev) => {
+        const merged = { ...prev, ...patch };
+        resolve(merged);
+        return merged;
+      });
+    });
     await api.updateProfile(next);
-  }, [draft]);
+  }, []);
 
   useEffect(() => {
     if (!getToken()) {

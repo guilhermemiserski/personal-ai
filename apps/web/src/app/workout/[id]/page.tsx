@@ -30,6 +30,7 @@ export default function WorkoutPage() {
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [completed, setCompleted] = useState<Record<string, number>>({});
+  const [loadKg, setLoadKg] = useState<Record<string, number>>({});
   const [effort, setEffort] = useState(7);
   const [energy, setEnergy] = useState(7);
   const [soreness, setSoreness] = useState(4);
@@ -119,9 +120,10 @@ export default function WorkoutPage() {
       planned_exercise_id: ex.id,
       completed_sets: completed[ex.id] ?? 0,
       completed_reps: ex.reps,
+      load_kg: loadKg[ex.id] ?? 0,
       rpe: effort,
     }));
-  }, [completed, effort, workout]);
+  }, [completed, effort, loadKg, workout]);
 
   async function finalizarTreino() {
     if (!sessionId || finished) return;
@@ -233,21 +235,40 @@ export default function WorkoutPage() {
               </p>
             )}
             <ExerciseVideo url={ex.video_url ?? fallbackVideoSearchUrl(ex.name)} />
-            <div className="mt-3">
-              <label className="text-xs text-slate-400">Séries concluídas</label>
-              <input
-                type="number"
-                min={0}
-                max={ex.sets}
-                value={completed[ex.id] ?? 0}
-                disabled={finished}
-                onChange={(e) =>
-                  setCompleted((prev) => ({
-                    ...prev,
-                    [ex.id]: Number(e.target.value),
-                  }))
-                }
-              />
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-slate-400">Séries concluídas</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={ex.sets}
+                  value={completed[ex.id] ?? 0}
+                  disabled={finished}
+                  onChange={(e) =>
+                    setCompleted((prev) => ({
+                      ...prev,
+                      [ex.id]: Number(e.target.value),
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-400">Carga (kg)</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.5}
+                  value={loadKg[ex.id] ?? ""}
+                  disabled={finished}
+                  placeholder="0"
+                  onChange={(e) =>
+                    setLoadKg((prev) => ({
+                      ...prev,
+                      [ex.id]: Number(e.target.value) || 0,
+                    }))
+                  }
+                />
+              </div>
             </div>
           </AnimatedListItem>
         ))}

@@ -55,6 +55,9 @@ Abra [http://localhost:3000](http://localhost:3000).
 
 ## Documentação
 
+- [`design.md`](design.md) — referência compacta para agentes (leia primeiro)
+- [`AGENTS.md`](AGENTS.md) — orquestração de agentes + Ponytail
+- [`.cursor/orchestration/README.md`](.cursor/orchestration/README.md) — time autônomo (bugs + features)
 - [`docs/PRD.md`](docs/PRD.md)
 - [`docs/TRAINING_GENERATION_RULES.md`](docs/TRAINING_GENERATION_RULES.md)
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)

@@ -72,17 +72,16 @@ export default function DashboardPage() {
     Promise.all([
       api.me(),
       api.getActivePlan(),
+      api.getTodayWorkout(),
       api.getProfile(),
       api.getAchievements(),
       api.getProgress(),
     ])
-      .then(([user, p, profile, achievementData, progressData]) => {
+      .then(([user, p, todayWorkout, profile, achievementData, progressData]) => {
         if (cancelled) return;
         setDisplayName(user.display_name);
         setPlan(p);
-        const sorted = [...p.workouts].sort((a, b) => a.day_index - b.day_index);
-        const dayIndex = new Date().getDay() % Math.max(sorted.length, 1);
-        setToday(sorted.length > 0 ? sorted[dayIndex] ?? sorted[0] : null);
+        setToday(todayWorkout);
         setProfileWeight(profile.weight_kg ?? null);
         setAchievements(achievementData.achievements.slice(0, 3));
         setProgress(progressData);
@@ -146,7 +145,7 @@ export default function DashboardPage() {
             href={`/workout/${today.id}`}
             className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-accent px-4 py-2.5 text-center font-semibold text-white transition hover:bg-accent-muted"
           >
-            Dar feedback do treino
+            {today.is_completed ? "Ver treino de hoje" : "Iniciar treino"}
           </Link>
         </motion.section>
       )}

@@ -29,7 +29,7 @@ test("fluxo ponta a ponta onboarding -> treino -> progresso -> coach", async ({ 
 
   await expect(page.getByRole("heading", { level: 3, name: "Feedback do treino" })).toBeVisible();
   await page.getByRole("button", { name: "Finalizar treino" }).click();
-  await expect(page.getByText("Adaptação sugerida")).toBeVisible();
+  await expect(page.getByText("Resumo")).toBeVisible();
 
   await page.goto("/progress");
   await expect(page.getByRole("heading", { name: "Progresso" })).toBeVisible();

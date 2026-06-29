@@ -1,0 +1,36 @@
+validation:
+  preflight:
+    - name: baseline
+      kind: baseline
+      command: .cursor/orchestration/scripts/preflight.ps1
+      required: true
+      timeout_minutes: 5
+      agent_failure_hint: Install Node 20+, Python 3.12+, run npm install in apps/web and pip install in apps/api.
+  build:
+    - name: web-build
+      kind: build
+      command: .cursor/orchestration/scripts/build.ps1
+      required: true
+      timeout_minutes: 15
+      agent_failure_hint: Fix TypeScript/Next errors under apps/web.
+    - name: api-import
+      kind: build
+      command: python -c "import app.main"
+      cwd: apps/api
+      required: true
+      timeout_minutes: 5
+      agent_failure_hint: Fix Python import errors; activate venv if needed.
+  lint:
+    - name: web-lint
+      kind: lint
+      command: .cursor/orchestration/scripts/lint.ps1
+      required: true
+      timeout_minutes: 10
+      agent_failure_hint: Fix ESLint issues in apps/web.
+  test:
+    - name: e2e
+      kind: smoke
+      command: .cursor/orchestration/scripts/test.ps1
+      required: false
+      timeout_minutes: 20
+      agent_failure_hint: Start API+web (start-dev.ps1) or skip with validate-only build+lint.
