@@ -66,6 +66,15 @@ export interface PlanSummary {
   workouts: Workout[];
 }
 
+export interface SessionExerciseLog {
+  planned_exercise_id: string;
+  completed_sets: number;
+  completed_reps?: string | null;
+  load_kg?: number | null;
+  rpe?: number | null;
+  notes?: string | null;
+}
+
 export interface SessionExerciseLogInput {
   planned_exercise_id: string;
   completed_sets: number;
@@ -88,6 +97,7 @@ export interface Session {
   adaptation_summary?: string | null;
   started_at: string;
   finished_at?: string | null;
+  exercise_logs?: SessionExerciseLog[];
 }
 
 export interface ProgressPoint {

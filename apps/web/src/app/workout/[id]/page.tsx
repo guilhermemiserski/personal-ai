@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -21,7 +21,25 @@ import { motion } from "framer-motion";
 import { api, ApiError } from "@/lib/api";
 import { getToken } from "@/lib/auth";
 import { getExerciseImageSrc } from "@/lib/exerciseImage";
-import type { SessionExerciseLogInput, Workout } from "@/lib/types";
+import type { Session, SessionExerciseLogInput, Workout } from "@/lib/types";
+
+function applySessionLogs(
+  session: Session,
+  setCompleted: Dispatch<SetStateAction<Record<string, number>>>,
+  setLoadKg: Dispatch<SetStateAction<Record<string, number>>>,
+): void {
+  if (!session.exercise_logs?.length) return;
+  const completedMap: Record<string, number> = {};
+  const loadMap: Record<string, number> = {};
+  for (const log of session.exercise_logs) {
+    completedMap[log.planned_exercise_id] = log.completed_sets;
+    if (log.load_kg != null && log.load_kg > 0) {
+      loadMap[log.planned_exercise_id] = log.load_kg;
+    }
+  }
+  setCompleted(completedMap);
+  setLoadKg(loadMap);
+}
 
 export default function WorkoutPage() {
   const params = useParams();
@@ -75,6 +93,7 @@ export default function WorkoutPage() {
         const session = await api.startSession(plannedWorkoutId);
         if (!cancelled) {
           setSessionId(session.id);
+          applySessionLogs(session, setCompleted, setLoadKg);
           setSessionError(null);
         }
       } catch (error) {
@@ -104,6 +123,7 @@ export default function WorkoutPage() {
     try {
       const session = await api.startSession(workout.id);
       setSessionId(session.id);
+      applySessionLogs(session, setCompleted, setLoadKg);
     } catch (error) {
       if (error instanceof ApiError && error.status === 409) {
         setFinished(true);

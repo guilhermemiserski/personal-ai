@@ -57,7 +57,7 @@ export default function OnboardingPage() {
     api
       .getProfile()
       .then((p) => setDraft({ ...p, injuries: p.injuries ?? [] }))
-      .catch(() => undefined)
+      .catch(() => setError("Não foi possível carregar seu perfil. Tente novamente."))
       .finally(() => setProfileLoading(false));
   }, [router]);
 

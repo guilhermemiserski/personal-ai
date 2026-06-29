@@ -20,6 +20,15 @@ class SessionUpdateRequest(BaseModel):
     exercise_logs: list[ExerciseLogInput]
 
 
+class ExerciseLogOut(BaseModel):
+    planned_exercise_id: str
+    completed_sets: int
+    completed_reps: str | None = None
+    load_kg: float | None = None
+    rpe: int | None = None
+    notes: str | None = None
+
+
 class SessionFeedbackRequest(BaseModel):
     completed: bool
     perceived_effort: int = Field(ge=1, le=10)
@@ -42,3 +51,4 @@ class SessionResponse(BaseModel):
     adaptation_summary: str | None = None
     started_at: datetime
     finished_at: datetime | None = None
+    exercise_logs: list[ExerciseLogOut] = Field(default_factory=list)

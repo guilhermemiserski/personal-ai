@@ -63,6 +63,12 @@ def _parse_json_content(content: str) -> dict[str, Any]:
     return json.loads(cleaned)
 
 
+_COACH_FALLBACK = (
+    "Pelo seu histórico recente, priorize execução técnica, sono e progressão gradual. "
+    "Se houver dor articular, reduza volume em 20% por 1 semana e ajuste exercícios."
+)
+
+
 class GroqPlanService:
     def __init__(self) -> None:
         self.client = AsyncOpenAI(
@@ -150,10 +156,7 @@ class GroqPlanService:
         recent_sessions: list[WorkoutSession],
     ) -> str:
         if not settings.groq_api_key:
-            return (
-                "Pelo seu histórico recente, priorize execução técnica, sono e progressão gradual. "
-                "Se houver dor articular, reduza volume em 20% por 1 semana e ajuste exercícios."
-            )
+            return _COACH_FALLBACK
 
         session_context = [
             {
@@ -177,12 +180,18 @@ class GroqPlanService:
             f"Pergunta do usuário: {user_message}\n"
             "Responda em até 6 linhas e inclua um próximo passo concreto."
         )
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
-            temperature=0.5,
-        )
-        return (response.choices[0].message.content or "").strip() or "Mantenha consistência e ajuste carga progressivamente."
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+                temperature=0.5,
+                timeout=settings.groq_request_timeout_seconds,
+            )
+        except Exception:
+            return _COACH_FALLBACK
+        if not response.choices:
+            return _COACH_FALLBACK
+        return (response.choices[0].message.content or "").strip() or _COACH_FALLBACK
 
 
 def _fallback_plan(profile: UserProfile) -> dict[str, Any]:

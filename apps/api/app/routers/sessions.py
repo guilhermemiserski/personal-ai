@@ -18,6 +18,7 @@ from app.models.training import (
 )
 from app.models.user import User
 from app.schemas.session import (
+    ExerciseLogOut,
     SessionFeedbackRequest,
     SessionResponse,
     SessionStartRequest,
@@ -30,6 +31,17 @@ router = APIRouter(prefix="/me/sessions", tags=["sessions"])
 
 
 def _to_response(session: WorkoutSession) -> SessionResponse:
+    logs = [
+        ExerciseLogOut(
+            planned_exercise_id=str(log.planned_exercise_id),
+            completed_sets=log.completed_sets,
+            completed_reps=log.completed_reps,
+            load_kg=log.load_kg,
+            rpe=log.rpe,
+            notes=log.notes,
+        )
+        for log in session.exercise_logs
+    ]
     return SessionResponse(
         id=str(session.id),
         planned_workout_id=str(session.planned_workout_id),
@@ -43,7 +55,17 @@ def _to_response(session: WorkoutSession) -> SessionResponse:
         adaptation_summary=session.adaptation_summary,
         started_at=session.started_at,
         finished_at=session.finished_at,
+        exercise_logs=logs,
     )
+
+
+async def _session_with_logs(db: AsyncSession, session_id: uuid.UUID) -> WorkoutSession:
+    result = await db.execute(
+        select(WorkoutSession)
+        .where(WorkoutSession.id == session_id)
+        .options(selectinload(WorkoutSession.exercise_logs))
+    )
+    return result.scalar_one()
 
 
 @router.post("", response_model=SessionResponse)
@@ -84,6 +106,7 @@ async def start_session(
             WorkoutSession.status == "in_progress",
             WorkoutSession.completed.is_(False),
         )
+        .options(selectinload(WorkoutSession.exercise_logs))
         .order_by(WorkoutSession.started_at.desc())
         .limit(1)
     )
@@ -109,6 +132,7 @@ async def start_session(
             )
         )
     await db.flush()
+    session = await _session_with_logs(db, session.id)
     return _to_response(session)
 
 
@@ -166,7 +190,9 @@ async def finish_session_with_feedback(
         raise HTTPException(status_code=400, detail="session_id inválido") from exc
 
     result = await db.execute(
-        select(WorkoutSession).where(WorkoutSession.id == sid, WorkoutSession.user_id == current_user.id)
+        select(WorkoutSession)
+        .where(WorkoutSession.id == sid, WorkoutSession.user_id == current_user.id)
+        .options(selectinload(WorkoutSession.exercise_logs))
     )
     session = result.scalar_one_or_none()
     if not session:
