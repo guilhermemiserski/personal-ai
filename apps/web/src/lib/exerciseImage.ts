@@ -1,4 +1,6 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import { resolveApiUrl } from "./apiBase";
+
+const API_URL = resolveApiUrl();
 
 function isUsableImageUrl(url: string): boolean {
   const lowered = url.toLowerCase();

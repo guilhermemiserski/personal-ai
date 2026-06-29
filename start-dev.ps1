@@ -48,7 +48,8 @@ Write-Host "Iniciando Web em http://localhost:$WebPort ..."
 
 $webCommand = @"
 Set-Location '$webDir'
-`$env:NEXT_PUBLIC_API_URL = '$apiUrl'
+`$env:API_PROXY_URL = '$apiUrl'
+`$env:NEXT_PUBLIC_API_URL = '/api'
 npm run dev -- --hostname=localhost --port=$WebPort
 "@
 

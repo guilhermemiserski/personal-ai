@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     groq_request_timeout_seconds: float = 22.0
     groq_base_url: str = "https://api.groq.com/openai/v1"
     cors_origins: str = "http://localhost:3000"
+    cookie_secure: bool | None = None
     wger_base_url: str = "https://wger.de"
     wger_language_id: int = 7
 
@@ -69,7 +70,9 @@ class Settings(BaseSettings):
         return self.database_url.startswith("sqlite")
 
     @property
-    def cookie_secure(self) -> bool:
+    def resolved_cookie_secure(self) -> bool:
+        if self.cookie_secure is not None:
+            return self.cookie_secure
         return not self.is_sqlite
 
     def validate_production_secrets(self) -> None:

@@ -70,11 +70,13 @@ Abra [http://localhost:3000](http://localhost:3000).
 2. No Render, use **Blueprint** apontando para `render.yaml` da raiz.
 3. Configure variáveis obrigatórias no serviço `personal-ai-api`:
    - `DATABASE_URL` (Postgres gerenciado, ex. Neon/Supabase)
-   - `JWT_SECRET`
+   - `JWT_SECRET` (32+ caracteres aleatórios)
    - `GROQ_API_KEY`
-   - `CORS_ORIGINS` (URL pública do frontend)
+   - `COOKIE_SECURE=true`
+   - `CORS_ORIGINS` = URL do frontend (ex. `https://personal-ai-web.onrender.com`)
 4. Configure no serviço `personal-ai-web`:
-   - `NEXT_PUBLIC_API_URL` (URL pública da API)
+   - `NEXT_PUBLIC_API_URL=/api` (proxy same-origin — **não** use a URL direta da API no browser)
+   - `API_PROXY_URL` = URL pública da API (ex. `https://personal-ai-api.onrender.com`)
 5. Valide:
    - API: `GET /health` retorna `{"status":"ok"}`
    - Web: registro/login, onboarding e geração de treino.
@@ -83,7 +85,7 @@ Abra [http://localhost:3000](http://localhost:3000).
 
 1. Deploy da API em Render/Railway com variáveis acima.
 2. Deploy da Web na Vercel com root em `apps/web`.
-3. Defina `NEXT_PUBLIC_API_URL` na Vercel com URL pública da API.
+3. Na Vercel: `NEXT_PUBLIC_API_URL=/api` e `API_PROXY_URL` = URL pública da API.
 4. Ajuste `CORS_ORIGINS` na API para o domínio final da Vercel.
 
 ## Próximas fases

@@ -20,8 +20,13 @@ services:
         value: llama-3.1-8b-instant
       - key: GROQ_REQUEST_TIMEOUT_SECONDS
         value: "22"
+      - key: COOKIE_SECURE
+        value: "true"
       - key: CORS_ORIGINS
-        sync: false
+        fromService:
+          type: web
+          name: personal-ai-web
+          envVarKey: RENDER_EXTERNAL_URL
       - key: WGER_BASE_URL
         value: https://wger.de
       - key: WGER_LANGUAGE_ID
@@ -37,4 +42,9 @@ services:
     autoDeploy: true
     envVars:
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: /api
+      - key: API_PROXY_URL
+        fromService:
+          type: web
+          name: personal-ai-api
+          envVarKey: RENDER_EXTERNAL_URL

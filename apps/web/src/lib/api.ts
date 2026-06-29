@@ -1,3 +1,4 @@
+import { resolveApiUrl } from "./apiBase";
 import { clearSession } from "./auth";
 import type {
   AchievementItem,
@@ -14,7 +15,7 @@ import type {
   Workout,
 } from "./types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = resolveApiUrl();
 
 export class ApiError extends Error {
   status: number;
@@ -69,12 +70,13 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
     } else if (Array.isArray(body.detail) && body.detail.length > 0) {
       detail = body.detail.map((item) => item.msg).filter(Boolean).join("; ") || detail;
     }
-    if (response.status === 401) {
+    const isAuthAttempt = path === "/auth/login" || path === "/auth/register";
+    if (response.status === 401 && !isAuthAttempt) {
       clearSession();
       detail = "Sessão expirada. Faça login novamente.";
       if (typeof window !== "undefined") {
-        const path = window.location.pathname;
-        if (path !== "/login" && path !== "/register") {
+        const pagePath = window.location.pathname;
+        if (pagePath !== "/login" && pagePath !== "/register") {
           window.location.replace("/login");
         }
       }
