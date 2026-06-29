@@ -26,7 +26,6 @@ import { AppHeaderActions } from "@/components/AppHeaderActions";
 import { AppShell } from "@/components/AppShell";
 import { DashboardSkeleton } from "@/components/skeleton";
 import { api } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 import { exportPlanToPdf } from "@/lib/exportPlanPdf";
 import type {
   AchievementItem,
@@ -63,11 +62,6 @@ export default function DashboardPage() {
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
-
     let cancelled = false;
 
     Promise.all([

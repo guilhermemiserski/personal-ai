@@ -8,7 +8,6 @@ import { AppShell } from "@/components/AppShell";
 import { NotificationCard } from "@/components/NotificationCard";
 import { AppShellSkeleton, Skeleton } from "@/components/skeleton";
 import { api } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 import type { NotificationItem } from "@/lib/types";
 
 export default function NotificationsPage() {
@@ -23,10 +22,6 @@ export default function NotificationsPage() {
   }, []);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
     loadNotifications()
       .catch(() => router.replace("/dashboard"))
       .finally(() => setLoading(false));

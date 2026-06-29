@@ -6,7 +6,6 @@ import { AppHeaderActions } from "@/components/AppHeaderActions";
 import { AppShell } from "@/components/AppShell";
 import { CoachSkeleton } from "@/components/skeleton";
 import { api } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 import type { CoachMessage } from "@/lib/types";
 
 export default function CoachPage() {
@@ -17,10 +16,6 @@ export default function CoachPage() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
     api
       .getCoachMessages()
       .then(setMessages)

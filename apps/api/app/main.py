@@ -37,6 +37,7 @@ def _migrate_postgres_columns(sync_conn) -> None:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    settings.validate_production_secrets()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_migrate_sqlite_columns)

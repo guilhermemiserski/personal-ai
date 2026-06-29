@@ -17,7 +17,6 @@ import { AppHeaderActions } from "@/components/AppHeaderActions";
 import { AppShell } from "@/components/AppShell";
 import { ProgressSkeleton } from "@/components/skeleton";
 import { api } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 import type { ProgressSummary } from "@/lib/types";
 
 export default function ProgressPage() {
@@ -26,10 +25,6 @@ export default function ProgressPage() {
   const [weightInput, setWeightInput] = useState("");
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
     api.getProgress().then(setProgress).catch(() => router.replace("/dashboard"));
   }, [router]);
 

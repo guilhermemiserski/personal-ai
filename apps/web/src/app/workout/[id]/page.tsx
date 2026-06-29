@@ -19,7 +19,6 @@ import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
 import { WorkoutSkeleton } from "@/components/skeleton";
 import { motion } from "framer-motion";
 import { api, ApiError } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 import { getExerciseImageSrc } from "@/lib/exerciseImage";
 import type { Session, SessionExerciseLogInput, Workout } from "@/lib/types";
 
@@ -61,11 +60,6 @@ export default function WorkoutPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
-
     let cancelled = false;
 
     async function loadWorkout(): Promise<void> {

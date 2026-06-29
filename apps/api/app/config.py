@@ -65,6 +65,28 @@ class Settings(BaseSettings):
     wger_language_id: int = 7
 
     @property
+    def is_sqlite(self) -> bool:
+        return self.database_url.startswith("sqlite")
+
+    @property
+    def cookie_secure(self) -> bool:
+        return not self.is_sqlite
+
+    def validate_production_secrets(self) -> None:
+        if self.is_sqlite:
+            return
+        secret = self.jwt_secret.strip()
+        insecure = {
+            "",
+            "dev-secret-change-in-production",
+            "troque-isso-em-producao",
+        }
+        if secret in insecure or len(secret) < 32:
+            raise RuntimeError(
+                "JWT_SECRET must be a strong random value (32+ chars) for Postgres deployments."
+            )
+
+    @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 

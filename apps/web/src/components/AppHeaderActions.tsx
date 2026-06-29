@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bell, ChevronDown, LogOut, User } from "lucide-react";
 import { NotificationCard } from "@/components/NotificationCard";
 import { api } from "@/lib/api";
-import { clearToken, getToken } from "@/lib/auth";
+import { clearSession } from "@/lib/auth";
 import type { NotificationItem } from "@/lib/types";
 
 const DROPDOWN_PREVIEW_COUNT = 4;
@@ -30,7 +30,6 @@ export function AppHeaderActions() {
   const [markingId, setMarkingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getToken()) return;
     Promise.all([api.me(), api.getNotifications()])
       .then(([user, data]) => {
         setDisplayName(user.display_name);
@@ -66,8 +65,13 @@ export function AppHeaderActions() {
     };
   }, [notifOpen, profileOpen]);
 
-  function logout(): void {
-    clearToken();
+  async function logout(): Promise<void> {
+    try {
+      await api.logout();
+    } catch {
+      /* ignore */
+    }
+    clearSession();
     router.push("/login");
   }
 

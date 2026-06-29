@@ -7,7 +7,6 @@ import { AppShell } from "@/components/AppShell";
 import { AnimatedDropdown } from "@/components/AnimatedDropdown";
 import { ProfileSkeleton } from "@/components/skeleton";
 import { api, ApiError } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 import type { AchievementItem, NotificationItem, Profile } from "@/lib/types";
 
 const GOAL_LABELS: Record<string, string> = {
@@ -34,10 +33,6 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
     Promise.all([api.getProfile(), api.getNotifications(), api.getAchievements()])
       .then(([p, n, a]) => {
         setProfile(p);

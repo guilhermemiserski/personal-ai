@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { OnboardingSkeleton } from "@/components/skeleton";
 import { api, ApiError } from "@/lib/api";
-import { getToken } from "@/lib/auth";
 import type { Profile } from "@/lib/types";
 import {
   CARDIO_LEVELS,
@@ -50,10 +49,6 @@ export default function OnboardingPage() {
   }, []);
 
   useEffect(() => {
-    if (!getToken()) {
-      router.replace("/login");
-      return;
-    }
     api
       .getProfile()
       .then((p) => setDraft({ ...p, injuries: p.injuries ?? [] }))

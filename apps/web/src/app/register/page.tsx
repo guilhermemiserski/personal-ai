@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { markAuthenticated } from "@/lib/auth";
 import { AuthFooter, AuthShell } from "@/components/AuthShell";
 import { AuthPageSkeleton } from "@/components/skeleton";
 
@@ -20,12 +20,12 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     try {
-      const { access_token } = await api.register(
+      await api.register(
         email,
         password,
         displayName.trim() || undefined,
       );
-      setToken(access_token);
+      markAuthenticated();
       router.push("/onboarding");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Falha ao criar conta");

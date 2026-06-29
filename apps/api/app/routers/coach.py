@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models.training import CoachMessage, WorkoutSession
 from app.models.user import User
 from app.schemas.coach import CoachAskRequest, CoachMessageResponse
+from app.services.coach_input import sanitize_coach_message
 from app.services.groq_ai import groq_plan_service
 
 router = APIRouter(prefix="/me/coach", tags=["coach"])
@@ -44,7 +45,11 @@ async def ask_coach(
     if not current_user.profile:
         raise HTTPException(status_code=400, detail="Perfil não encontrado")
 
-    user_msg = CoachMessage(user_id=current_user.id, role="user", content=body.message)
+    message = sanitize_coach_message(body.message)
+    if len(message) < 2:
+        raise HTTPException(status_code=400, detail="Mensagem muito curta")
+
+    user_msg = CoachMessage(user_id=current_user.id, role="user", content=message)
     db.add(user_msg)
     await db.flush()
 
@@ -55,7 +60,7 @@ async def ask_coach(
         .limit(10)
     )
     recent_sessions = sessions_result.scalars().all()
-    reply = await groq_plan_service.coach_reply(current_user.profile, body.message, recent_sessions)
+    reply = await groq_plan_service.coach_reply(current_user.profile, message, recent_sessions)
     assistant_msg = CoachMessage(user_id=current_user.id, role="assistant", content=reply)
     db.add(assistant_msg)
     await db.flush()

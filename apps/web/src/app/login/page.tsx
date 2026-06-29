@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import { setToken } from "@/lib/auth";
+import { markAuthenticated } from "@/lib/auth";
 import { AuthFooter, AuthShell } from "@/components/AuthShell";
 import { AuthPageSkeleton } from "@/components/skeleton";
 
@@ -20,8 +20,8 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const { access_token } = await api.login(email, password);
-      setToken(access_token);
+      await api.login(email, password);
+      markAuthenticated();
       const user = await api.me();
       router.push(user.onboarding_completed ? "/dashboard" : "/onboarding");
     } catch (err) {

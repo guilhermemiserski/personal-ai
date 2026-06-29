@@ -1,4 +1,4 @@
-import { clearToken, getToken } from "./auth";
+import { clearSession } from "./auth";
 import type {
   AchievementItem,
   BodyMetricInput,
@@ -32,14 +32,10 @@ interface ApiRequestOptions extends RequestInit {
 }
 
 async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const token = getToken();
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(options.headers ?? {}),
   };
-  if (token) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
-  }
 
   const controller = new AbortController();
   const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
@@ -49,7 +45,12 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
 
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, { ...requestOptions, headers, signal });
+    response = await fetch(`${API_URL}${path}`, {
+      ...requestOptions,
+      headers,
+      signal,
+      credentials: "include",
+    });
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
       throw new ApiError(408, "A API demorou demais para responder. Tente novamente.");
@@ -68,8 +69,8 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
     } else if (Array.isArray(body.detail) && body.detail.length > 0) {
       detail = body.detail.map((item) => item.msg).filter(Boolean).join("; ") || detail;
     }
-    if (response.status === 401 && token) {
-      clearToken();
+    if (response.status === 401) {
+      clearSession();
       detail = "Sessão expirada. Faça login novamente.";
       if (typeof window !== "undefined") {
         const path = window.location.pathname;
@@ -98,6 +99,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     }),
+
+  logout: () => request<void>("/auth/logout", { method: "POST" }),
 
   me: () => request<UserMe>("/auth/me"),
 
