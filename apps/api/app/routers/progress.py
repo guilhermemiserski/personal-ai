@@ -9,7 +9,8 @@ from app.core.deps import get_current_user
 from app.database import get_db
 from app.models.training import BodyMetric, SessionExerciseLog, WorkoutSession
 from app.models.user import User
-from app.schemas.progress import BodyMetricInput, BodyMetricResponse, ProgressPoint, ProgressSummary
+from app.schemas.progress import AdaptationEvent, BodyMetricInput, BodyMetricResponse, ProgressPoint, ProgressSummary
+from app.services.adaptation import session_has_applied_adaptation
 from app.services.week_bounds import current_week_bounds
 
 router = APIRouter(prefix="/me", tags=["progress"])
@@ -93,6 +94,24 @@ async def get_progress(
         }
     )
 
+    adapted_sessions = [s for s in completed_sessions if session_has_applied_adaptation(s)]
+    adaptations_this_week = sum(
+        1
+        for session in adapted_sessions
+        if week_start <= _session_event_date(session) <= week_end
+    )
+    recent_adaptations = [
+        AdaptationEvent(
+            date=_session_event_date(session).isoformat(),
+            summary=session.adaptation_summary or "",
+        )
+        for session in sorted(
+            adapted_sessions,
+            key=lambda item: _session_event_date(item),
+            reverse=True,
+        )[:3]
+    ]
+
     return ProgressSummary(
         adherence_pct=round(adherence, 1),
         completed_workouts=len(completed_sessions),
@@ -103,7 +122,15 @@ async def get_progress(
         weight_progression=weight_progression,
         consistency_progression=consistency_progression,
         completed_workout_ids=completed_workout_ids,
+        adaptations_this_week=adaptations_this_week,
+        recent_adaptations=recent_adaptations,
     )
+
+
+def _session_event_date(session: WorkoutSession) -> date:
+    if session.finished_at is not None:
+        return session.finished_at.date()
+    return session.started_at.date()
 
 
 

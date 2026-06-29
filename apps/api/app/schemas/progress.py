@@ -24,6 +24,11 @@ class ProgressPoint(BaseModel):
     value: float
 
 
+class AdaptationEvent(BaseModel):
+    date: str
+    summary: str
+
+
 class ProgressSummary(BaseModel):
     adherence_pct: float
     completed_workouts: int
@@ -34,3 +39,5 @@ class ProgressSummary(BaseModel):
     weight_progression: list[ProgressPoint]
     consistency_progression: list[ProgressPoint]
     completed_workout_ids: list[str] = []
+    adaptations_this_week: int = 0
+    recent_adaptations: list[AdaptationEvent] = []

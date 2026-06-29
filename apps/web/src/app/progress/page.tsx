@@ -11,6 +11,7 @@ import {
   Scale,
   Target,
   TrendingUp,
+  Wand2,
 } from "lucide-react";
 import { AppHeaderActions } from "@/components/AppHeaderActions";
 import { AppShell } from "@/components/AppShell";
@@ -83,7 +84,43 @@ export default function ProgressPage() {
           icon={<Dumbbell className="h-3.5 w-3.5 text-accent" />}
           small
         />
+        <MetricCard
+          label="Ajustes (semana)"
+          value={String(progress.adaptations_this_week)}
+          icon={<Wand2 className="h-3.5 w-3.5 text-violet-300" />}
+          small
+        />
       </motion.div>
+
+      {progress.recent_adaptations.length > 0 && (
+        <motion.section
+          className="panel mt-4 border-violet-500/25 bg-violet-500/5"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+        >
+          <h2 className="panel-title inline-flex items-center gap-2">
+            <Wand2 className="h-4 w-4 text-violet-300" />
+            Ajustes no plano
+          </h2>
+          <p className="mt-1 text-xs text-slate-400">
+            Adaptações automáticas com base no seu feedback de treino.
+          </p>
+          <div className="mt-3 space-y-2">
+            {progress.recent_adaptations.map((item) => (
+              <div
+                key={`${item.date}-${item.summary.slice(0, 24)}`}
+                className="rounded-xl border border-violet-500/20 bg-surface-muted/40 px-3 py-2"
+              >
+                <p className="text-[11px] uppercase tracking-wide text-violet-300/80">
+                  {formatDateLabel(item.date)}
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-slate-300">{item.summary}</p>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       <motion.section
         className="panel mt-4"

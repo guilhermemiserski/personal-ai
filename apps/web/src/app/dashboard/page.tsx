@@ -20,6 +20,7 @@ import {
   Star,
   Target,
   Trophy,
+  Wand2,
 } from "lucide-react";
 import { AppHeaderActions } from "@/components/AppHeaderActions";
 import { AppShell } from "@/components/AppShell";
@@ -130,7 +131,15 @@ export default function DashboardPage() {
           whileHover={{ scale: 1.01 }}
         >
           <p className="text-xs font-medium uppercase tracking-wide text-accent">Treino de hoje</p>
-          <h2 className="mt-1 text-xl font-semibold">{today.day_label}</h2>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <h2 className="text-xl font-semibold">{today.day_label}</h2>
+            {(progress?.adaptations_this_week ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-violet-400/40 bg-violet-500/15 px-2 py-0.5 text-[10px] font-semibold text-violet-200">
+                <Wand2 className="h-3 w-3" />
+                Plano ajustado
+              </span>
+            )}
+          </div>
           <p className="subtle mt-2 flex items-center gap-3">
             <span className="inline-flex items-center gap-1">
               <Clock3 className="h-3.5 w-3.5 text-accent" />
@@ -323,6 +332,23 @@ function WeekSummaryPanel({
           </Link>
         </div>
       </div>
+
+      {progress && progress.adaptations_this_week > 0 && (
+        <div className="mb-3 rounded-xl border border-violet-500/30 bg-violet-500/10 px-3 py-2.5">
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-200">
+            <Wand2 className="h-3.5 w-3.5" />
+            Plano ajustado {progress.adaptations_this_week}x esta semana
+          </p>
+          {progress.recent_adaptations[0] && (
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-300 line-clamp-3">
+              {progress.recent_adaptations[0].summary}
+            </p>
+          )}
+          <Link href="/progress" className="mt-2 inline-block text-[11px] text-violet-300 hover:underline">
+            Ver histórico de ajustes
+          </Link>
+        </div>
+      )}
 
       {progress && (
         <div className="mb-3 grid grid-cols-3 gap-2">

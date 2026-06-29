@@ -105,6 +105,11 @@ export interface ProgressPoint {
   value: number;
 }
 
+export interface AdaptationEvent {
+  date: string;
+  summary: string;
+}
+
 export interface ProgressSummary {
   adherence_pct: number;
   completed_workouts: number;
@@ -115,6 +120,8 @@ export interface ProgressSummary {
   weight_progression: ProgressPoint[];
   consistency_progression: ProgressPoint[];
   completed_workout_ids: string[];
+  adaptations_this_week: number;
+  recent_adaptations: AdaptationEvent[];
 }
 
 export interface BodyMetricInput {

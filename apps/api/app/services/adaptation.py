@@ -7,12 +7,18 @@ from sqlalchemy.orm import selectinload
 
 from app.models.training import PlannedExercise, PlannedWorkout, TrainingPlan, WorkoutSession
 
+ADAPTATION_APPLIED_MARKER = "Ajuste aplicado:"
+
 
 @dataclass
 class AdaptationPatch:
     adaptation_type: str
     reason: str
     changes: list[dict[str, Any]] = field(default_factory=list)
+
+
+def session_has_applied_adaptation(session: WorkoutSession) -> bool:
+    return bool(session.adaptation_summary and ADAPTATION_APPLIED_MARKER in session.adaptation_summary)
 
 
 def decide_adaptation(session: WorkoutSession) -> AdaptationPatch | None:
@@ -59,7 +65,7 @@ def build_adaptation_summary(session: WorkoutSession, patch: AdaptationPatch | N
         details = "; ".join(
             f"{change['field']} em {change['exercise_name']}" for change in patch.changes[:3]
         )
-        return f"{patch.reason} Ajuste aplicado: {details}."
+        return f"{patch.reason} {ADAPTATION_APPLIED_MARKER} {details}."
 
     return patch.reason
 
