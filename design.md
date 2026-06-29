@@ -95,7 +95,7 @@ Validation: `.cursor/orchestration/scripts/*.ps1` (orchestrator skill).
 | 0 | done | Auth, DB, docker-compose, docs |
 | 1 | done | Onboarding + plan generation |
 | 2 | partial | Workout execution, logging (load_kg), feedback, session resume |
-| 3 | partial | Adaptation engine, dashboard metrics |
+| 3 | partial | Adaptation engine (plan patches), dashboard metrics |
 | 4 | partial | Coach chat, notifications |
 | 5 | todo | Gamification, PWA polish |
 

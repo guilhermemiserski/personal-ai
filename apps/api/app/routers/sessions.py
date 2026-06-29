@@ -24,7 +24,7 @@ from app.schemas.session import (
     SessionStartRequest,
     SessionUpdateRequest,
 )
-from app.services.adaptation import build_adaptation_summary
+from app.services.adaptation import apply_plan_adaptation, build_adaptation_summary
 from app.services.workout_completion import has_completed_workout_this_week
 
 router = APIRouter(prefix="/me/sessions", tags=["sessions"])
@@ -209,14 +209,18 @@ async def finish_session_with_feedback(
     session.notes = body.notes
     if session.finished_at is None:
         session.finished_at = datetime.now(UTC)
-    session.adaptation_summary = build_adaptation_summary(session)
+
+    patch = await apply_plan_adaptation(db, session)
+    session.adaptation_summary = build_adaptation_summary(session, patch)
 
     summary_text = session.adaptation_summary or "Seu feedback foi registrado. Bom trabalho!"
+    notification_type = "adaptation" if patch and patch.changes else "recovery"
+    notification_title = "Plano ajustado" if patch and patch.changes else "Treino concluído"
     db.add(
         UserNotification(
             user_id=current_user.id,
-            type="recovery",
-            title="Treino concluído",
+            type=notification_type,
+            title=notification_title,
             body=summary_text,
         )
     )
