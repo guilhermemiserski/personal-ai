@@ -15,6 +15,8 @@ Use project skills (`.cursor/skills/`):
 | `personal-ai-bug-hunt` | Find/fix bugs without detailed repro |
 | `personal-ai-feature` | Implement next backlog item without a spec |
 | `personal-ai-validate` | Run validation only |
+| `personal-ai-security-review` | Security audit (auth, IDOR, secrets) |
+
 
 Orchestration config: `.cursor/orchestration/`.
 

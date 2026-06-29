@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useMemo, useState, useId, type Dispatch, type SetStateAction } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -257,8 +257,11 @@ export default function WorkoutPage() {
             <ExerciseVideo url={ex.video_url ?? fallbackVideoSearchUrl(ex.name)} />
             <div className="mt-3 grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-400">Séries concluídas</label>
+                <label htmlFor={`sets-${ex.id}`} className="text-xs text-slate-400">
+                  Séries concluídas
+                </label>
                 <input
+                  id={`sets-${ex.id}`}
                   type="number"
                   min={0}
                   max={ex.sets}
@@ -273,8 +276,11 @@ export default function WorkoutPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-400">Carga (kg)</label>
+                <label htmlFor={`load-${ex.id}`} className="text-xs text-slate-400">
+                  Carga (kg)
+                </label>
                 <input
+                  id={`load-${ex.id}`}
                   type="number"
                   min={0}
                   step={0.5}
@@ -424,14 +430,16 @@ function RangeField({
   onChange: (value: number) => void;
   icon?: React.ReactNode;
 }) {
+  const id = useId();
   return (
     <div className="rounded-xl border border-surface-border bg-surface-muted/50 p-2.5">
-      <label className="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-200">
+      <label htmlFor={id} className="mb-1 flex items-center gap-1.5 text-xs font-medium text-slate-200">
         {icon}
         <span>{label}</span>
       </label>
       <p className="mb-2 text-[11px] text-slate-400">{helper}</p>
       <input
+        id={id}
         type="range"
         min={1}
         max={10}

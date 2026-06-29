@@ -31,6 +31,6 @@ validation:
     - name: e2e
       kind: smoke
       command: .cursor/orchestration/scripts/test.ps1
-      required: false
-      timeout_minutes: 20
-      agent_failure_hint: Start API+web (start-dev.ps1) or skip with validate-only build+lint.
+      required: true
+      timeout_minutes: 25
+      agent_failure_hint: Run from apps/web with CI=true — playwright starts API+web via webServer config.

@@ -93,3 +93,4 @@ bug | feature | mixed
 - [bug-hunt skill](../personal-ai-bug-hunt/SKILL.md)
 - [feature skill](../personal-ai-feature/SKILL.md)
 - [validate skill](../personal-ai-validate/SKILL.md)
+- [security-review skill](../personal-ai-security-review/SKILL.md)
