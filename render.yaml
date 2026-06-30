@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: personal-ai-api
+    name: personal-ai-trainer-api
     runtime: docker
     plan: free
     rootDir: apps/api
@@ -46,5 +46,5 @@ services:
       - key: API_PROXY_URL
         fromService:
           type: web
-          name: personal-ai-api
+          name: personal-ai-trainer-api
           envVarKey: RENDER_EXTERNAL_URL

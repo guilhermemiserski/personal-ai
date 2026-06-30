@@ -12,13 +12,33 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 
 function apiOrigin(): string {
-  return (process.env.API_PROXY_URL ?? "http://127.0.0.1:8000").replace(/\/$/, "");
+  const configured = process.env.API_PROXY_URL?.trim();
+  if (!configured) {
+    return "";
+  }
+  return configured.replace(/\/$/, "");
+}
+
+function proxyConfigError(): string | null {
+  if (!process.env.API_PROXY_URL?.trim()) {
+    return "API_PROXY_URL não está definido no serviço web. Configure a URL pública da API (apps/api) no Render.";
+  }
+  return null;
+}
+
+function proxyFailureResponse(status: number, detail: string): NextResponse {
+  return NextResponse.json({ detail }, { status });
 }
 
 async function proxyRequest(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ): Promise<NextResponse> {
+  const configError = proxyConfigError();
+  if (configError) {
+    return proxyFailureResponse(503, configError);
+  }
+
   const { path } = await context.params;
   const targetUrl = `${apiOrigin()}/${path.join("/")}${request.nextUrl.search}`;
 
@@ -41,7 +61,15 @@ async function proxyRequest(
     init.body = await request.arrayBuffer();
   }
 
-  const upstream = await fetch(targetUrl, init);
+  let upstream: Response;
+  try {
+    upstream = await fetch(targetUrl, init);
+  } catch {
+    return proxyFailureResponse(
+      503,
+      "Não foi possível conectar à API. Verifique se o serviço da API está no ar e se API_PROXY_URL está correto.",
+    );
+  }
 
   const responseHeaders = new Headers();
   upstream.headers.forEach((value, key) => {
