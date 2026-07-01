@@ -33,14 +33,24 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    let redirecting = false;
     try {
       await api.login(email, password);
       markAuthenticated();
+      redirecting = true;
       window.location.assign("/");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Falha ao entrar");
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Falha ao entrar";
+      setError(message);
     } finally {
-      setLoading(false);
+      if (!redirecting) {
+        setLoading(false);
+      }
     }
   }
 

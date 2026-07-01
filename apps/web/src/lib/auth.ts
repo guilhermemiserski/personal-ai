@@ -3,18 +3,44 @@ const TOKEN_SESSION_KEY = "pa_bearer_session";
 
 let inMemoryAccessToken: string | null = null;
 
-function readStoredToken(): string | null {
+function safeSessionGet(key: string): string | null {
   if (typeof window === "undefined") return null;
-  return sessionStorage.getItem(TOKEN_SESSION_KEY);
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSessionSet(key: string, value: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    // Private mode / storage blocked — in-memory token still works until reload.
+  }
+}
+
+function safeSessionRemove(key: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
+function readStoredToken(): string | null {
+  return safeSessionGet(TOKEN_SESSION_KEY);
 }
 
 export function setAccessToken(token: string | null): void {
   inMemoryAccessToken = token;
   if (typeof window === "undefined") return;
   if (token) {
-    sessionStorage.setItem(TOKEN_SESSION_KEY, token);
+    safeSessionSet(TOKEN_SESSION_KEY, token);
   } else {
-    sessionStorage.removeItem(TOKEN_SESSION_KEY);
+    safeSessionRemove(TOKEN_SESSION_KEY);
   }
 }
 
@@ -26,18 +52,15 @@ export function getAccessToken(): string | null {
 }
 
 export function markAuthenticated(): void {
-  if (typeof window === "undefined") return;
-  sessionStorage.setItem(SESSION_KEY, "1");
+  safeSessionSet(SESSION_KEY, "1");
 }
 
 export function clearSession(): void {
-  if (typeof window === "undefined") return;
-  sessionStorage.removeItem(SESSION_KEY);
-  sessionStorage.removeItem(TOKEN_SESSION_KEY);
+  safeSessionRemove(SESSION_KEY);
+  safeSessionRemove(TOKEN_SESSION_KEY);
   inMemoryAccessToken = null;
 }
 
 export function hasSessionHint(): boolean {
-  if (typeof window === "undefined") return false;
-  return sessionStorage.getItem(SESSION_KEY) === "1";
+  return safeSessionGet(SESSION_KEY) === "1";
 }

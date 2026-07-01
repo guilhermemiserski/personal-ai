@@ -126,17 +126,27 @@ async function executeRequest<T>(path: string, options: ApiRequestOptions = {}):
     setAccessToken(null);
     return undefined as T;
   }
-  const data = (await response.json()) as T;
-  if (
-    (path === "/auth/login" || path === "/auth/register") &&
-    typeof data === "object" &&
-    data !== null &&
-    "access_token" in data &&
-    typeof (data as TokenResponse).access_token === "string"
-  ) {
-    setAccessToken((data as TokenResponse).access_token);
+  let data: T;
+  try {
+    data = (await response.json()) as T;
+  } catch {
+    throw new ApiError(502, "Resposta inválida do servidor. Tente novamente.");
+  }
+  if (path === "/auth/login" || path === "/auth/register") {
+    const token = extractAccessToken(data);
+    if (token) {
+      setAccessToken(token);
+    }
   }
   return data;
+}
+
+function extractAccessToken(data: unknown): string | null {
+  if (typeof data !== "object" || data === null) {
+    return null;
+  }
+  const token = (data as { access_token?: unknown }).access_token;
+  return typeof token === "string" ? token : null;
 }
 
 export const api = {
