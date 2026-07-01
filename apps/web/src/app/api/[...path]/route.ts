@@ -28,6 +28,41 @@ function proxyConfigError(): string | null {
   return null;
 }
 
+function rewriteCookieForWebHost(cookie: string): string {
+  return cookie
+    .split(";")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0 && !part.toLowerCase().startsWith("domain="))
+    .join("; ");
+}
+
+function forwardUpstreamHeaders(upstream: Response, responseHeaders: Headers): void {
+  upstream.headers.forEach((value, key) => {
+    const lower = key.toLowerCase();
+    if (HOP_BY_HOP_HEADERS.has(lower) || lower === "set-cookie") {
+      return;
+    }
+    responseHeaders.append(key, value);
+  });
+
+  const setCookies =
+    typeof upstream.headers.getSetCookie === "function"
+      ? upstream.headers.getSetCookie()
+      : [];
+
+  if (setCookies.length > 0) {
+    for (const cookie of setCookies) {
+      responseHeaders.append("set-cookie", rewriteCookieForWebHost(cookie));
+    }
+    return;
+  }
+
+  const fallbackCookie = upstream.headers.get("set-cookie");
+  if (fallbackCookie) {
+    responseHeaders.append("set-cookie", rewriteCookieForWebHost(fallbackCookie));
+  }
+}
+
 function proxyFailureResponse(status: number, detail: string): NextResponse {
   return NextResponse.json({ detail }, { status });
 }
@@ -82,13 +117,7 @@ async function proxyRequest(
   }
 
   const responseHeaders = new Headers();
-  upstream.headers.forEach((value, key) => {
-    const lower = key.toLowerCase();
-    if (HOP_BY_HOP_HEADERS.has(lower)) {
-      return;
-    }
-    responseHeaders.append(key, value);
-  });
+  forwardUpstreamHeaders(upstream, responseHeaders);
 
   return new NextResponse(upstream.body, {
     status: upstream.status,

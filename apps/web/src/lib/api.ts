@@ -1,5 +1,5 @@
 import { resolveApiUrl } from "./apiBase";
-import { clearSession } from "./auth";
+import { clearSession, getAccessToken, setAccessToken } from "./auth";
 import type {
   AchievementItem,
   BodyMetricInput,
@@ -65,6 +65,10 @@ async function executeRequest<T>(path: string, options: ApiRequestOptions = {}):
     "Content-Type": "application/json",
     ...(options.headers ?? {}),
   };
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    (headers as Record<string, string>).Authorization = `Bearer ${accessToken}`;
+  }
 
   const controller = new AbortController();
   const timeoutMs = options.timeoutMs ?? REQUEST_TIMEOUT_MS;
@@ -119,9 +123,20 @@ async function executeRequest<T>(path: string, options: ApiRequestOptions = {}):
     throw new ApiError(response.status, detail);
   }
   if (response.status === 204) {
+    setAccessToken(null);
     return undefined as T;
   }
-  return response.json() as Promise<T>;
+  const data = (await response.json()) as T;
+  if (
+    (path === "/auth/login" || path === "/auth/register") &&
+    typeof data === "object" &&
+    data !== null &&
+    "access_token" in data &&
+    typeof (data as TokenResponse).access_token === "string"
+  ) {
+    setAccessToken((data as TokenResponse).access_token);
+  }
+  return data;
 }
 
 export const api = {
