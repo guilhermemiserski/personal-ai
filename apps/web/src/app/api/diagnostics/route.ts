@@ -35,6 +35,7 @@ export async function GET(): Promise<NextResponse> {
 
     return NextResponse.json({
       ok: trainerApi,
+      web_version: process.env.npm_package_version ?? "0.1.0",
       api_proxy_url: origin,
       upstream_status: health.status,
       upstream_health: body,

@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { resolveApiUrl } from "@/lib/apiBase";
 import { markAuthenticated } from "@/lib/auth";
@@ -10,7 +9,6 @@ import { AuthFooter, AuthShell } from "@/components/AuthShell";
 import { AuthPageSkeleton } from "@/components/skeleton";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -38,8 +36,7 @@ export default function LoginPage() {
     try {
       await api.login(email, password);
       markAuthenticated();
-      const user = await api.me();
-      router.push(user.onboarding_completed ? "/dashboard" : "/onboarding");
+      window.location.assign("/");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Falha ao entrar");
     } finally {

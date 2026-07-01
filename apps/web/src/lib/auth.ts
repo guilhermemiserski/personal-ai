@@ -1,13 +1,28 @@
 const SESSION_KEY = "personal_ai_session";
+const TOKEN_SESSION_KEY = "pa_bearer_session";
 
 let inMemoryAccessToken: string | null = null;
 
+function readStoredToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem(TOKEN_SESSION_KEY);
+}
+
 export function setAccessToken(token: string | null): void {
   inMemoryAccessToken = token;
+  if (typeof window === "undefined") return;
+  if (token) {
+    sessionStorage.setItem(TOKEN_SESSION_KEY, token);
+  } else {
+    sessionStorage.removeItem(TOKEN_SESSION_KEY);
+  }
 }
 
 export function getAccessToken(): string | null {
-  return inMemoryAccessToken;
+  if (inMemoryAccessToken) {
+    return inMemoryAccessToken;
+  }
+  return readStoredToken();
 }
 
 export function markAuthenticated(): void {
@@ -18,6 +33,7 @@ export function markAuthenticated(): void {
 export function clearSession(): void {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(TOKEN_SESSION_KEY);
   inMemoryAccessToken = null;
 }
 
