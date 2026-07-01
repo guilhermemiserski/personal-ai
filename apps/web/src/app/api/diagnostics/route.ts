@@ -30,18 +30,25 @@ export async function GET(): Promise<NextResponse> {
       cache: "no-store",
       signal: controller.signal,
     });
-    const body = (await health.json().catch(() => ({}))) as { status?: string };
+    const body = (await health.json().catch(() => ({}))) as {
+      status?: string;
+      groq_configured?: boolean;
+    };
     const trainerApi = health.ok && body.status === "ok";
+    const groqConfigured = body.groq_configured === true;
 
     return NextResponse.json({
       ok: trainerApi,
+      groq_configured: groqConfigured,
       web_version: process.env.npm_package_version ?? "0.1.0",
       api_proxy_url: origin,
       upstream_status: health.status,
       upstream_health: body,
-      hint: trainerApi
-        ? "API do Personal AI Trainer respondeu corretamente."
-        : "A URL da API não retornou /health com {status:'ok'}. Verifique DATABASE_URL e JWT_SECRET no serviço.",
+      hint: !trainerApi
+        ? "A URL da API não retornou /health com {status:'ok'}. Verifique DATABASE_URL e JWT_SECRET no serviço."
+        : !groqConfigured
+          ? "API no ar, mas GROQ_API_KEY não está configurada — planos e coach usam fallback local."
+          : "API do Personal AI Trainer respondeu corretamente com IA Groq ativa.",
     });
   } catch {
     return NextResponse.json(

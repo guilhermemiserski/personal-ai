@@ -71,5 +71,8 @@ app.include_router(notifications.router)
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+async def health() -> dict[str, str | bool]:
+    return {
+        "status": "ok",
+        "groq_configured": bool(settings.groq_api_key.strip()),
+    }

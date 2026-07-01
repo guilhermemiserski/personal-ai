@@ -214,8 +214,8 @@ def _fallback_plan(profile: UserProfile) -> dict[str, Any]:
         "program_name": f"Plano personalizado – {goal}",
         "weekly_split": f"{days} dias/semana",
         "rationale": (
-            "Plano base gerado localmente (configure GROQ_API_KEY para IA completa). "
-            "Ajustado ao seu perfil e disponibilidade."
+            "Plano inicial montado com base no seu perfil, objetivo e disponibilidade semanal. "
+            "Ajuste a carga e o volume conforme sua evolução."
         ),
         "weeks": [{"week_number": 1, "days": day_templates}],
     }
