@@ -64,31 +64,29 @@ Abra [http://localhost:3000](http://localhost:3000).
 
 ## Deploy rápido (grátis)
 
-### Opção 1: Render (API + Web)
+### Opção 1: Render (serviço único — Web + API)
 
-> **Atenção:** a URL `personal-ai-api.onrender.com` pode ser de **outro projeto** (API de chat/memória com login OTP). O treinador deste repositório expõe `POST /auth/login` com e-mail/senha e `GET /health` → `{"status":"ok"}`. Use um serviço dedicado (ex. `personal-ai-trainer-api`).
+> **Atenção:** a URL `personal-ai-api.onrender.com` é de **outro projeto** (API de chat/memória com login OTP). Este repositório expõe `POST /auth/login` com e-mail/senha e `GET /health` → `{"status":"ok"}`.
 
 1. Suba o repositório no GitHub.
 2. No Render, use **Blueprint** apontando para `render.yaml` da raiz.
-3. Configure variáveis obrigatórias no serviço **`personal-ai-trainer-api`** (`apps/api`):
+3. Configure variáveis obrigatórias no serviço **`personal-ai-web`**:
    - `DATABASE_URL` (Postgres gerenciado, ex. Neon/Supabase)
    - `JWT_SECRET` (32+ caracteres aleatórios)
    - `GROQ_API_KEY`
    - `COOKIE_SECURE=true`
    - `CORS_ORIGINS` = URL do frontend (ex. `https://personal-ai-web.onrender.com`)
-4. Configure no serviço **`personal-ai-web`**:
-   - `NEXT_PUBLIC_API_URL=/api`
-   - `API_PROXY_URL` = URL pública do serviço **trainer** (ex. `https://personal-ai-trainer-api.onrender.com`)
-5. Valide:
-   - API: `GET /health` retorna `{"status":"ok"}`
-   - Web: `GET /api/diagnostics` retorna `"ok": true`
-   - Web: registro/login, onboarding e geração de treino.
+4. O blueprint já define `API_PROXY_URL=http://127.0.0.1:8000` e `NEXT_PUBLIC_API_URL=/api` — a API FastAPI roda **no mesmo container** que o Next.js (sem segundo serviço).
+5. **Migração** (se você tinha `personal-ai-trainer-api` separado): copie `DATABASE_URL`, `JWT_SECRET` e `GROQ_API_KEY` para `personal-ai-web`, faça deploy do blueprint atualizado e **remova** o serviço antigo da API.
+6. Valide:
+   - `GET /api/health` retorna `{"status":"ok"}`
+   - `GET /api/diagnostics` retorna `"ok": true`
+   - Registro/login, onboarding e geração de treino.
 
 #### Erro 502 no login
 
-- **Causa comum:** `API_PROXY_URL` ausente no web → o proxy tenta `127.0.0.1:8000` dentro do container.
-- **Outra causa:** `API_PROXY_URL` aponta para a API errada (sem `/auth/login`). Confira `GET https://SEU-WEB.onrender.com/api/diagnostics`.
-- **Cold start (plano free):** o primeiro acesso após inatividade pode levar ~1 minuto. A tela de login já tenta acordar a API automaticamente.
+- **Causa comum (legado):** dois serviços no Render — o web acorda antes da API e o proxy falha. Use o `render.yaml` atual (serviço único).
+- **Cold start (plano free):** o primeiro acesso após inatividade pode levar ~1 minuto. A tela de login tenta acordar a API automaticamente.
 
 ### Opção 2: Vercel (Web) + Render/Railway (API)
 

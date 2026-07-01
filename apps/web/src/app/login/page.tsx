@@ -17,13 +17,33 @@ export default function LoginPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${resolveApiUrl()}/health`, { credentials: "include" })
-      .catch(() => undefined)
-      .finally(() => {
-        if (!cancelled) {
-          setWaking(false);
+
+    async function wakeApi(): Promise<void> {
+      const maxAttempts = 4;
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          const response = await fetch(`${resolveApiUrl()}/health`, {
+            credentials: "include",
+            cache: "no-store",
+          });
+          if (response.ok) {
+            return;
+          }
+        } catch {
+          // retry
         }
-      });
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 3_000 * attempt));
+        }
+      }
+    }
+
+    wakeApi().finally(() => {
+      if (!cancelled) {
+        setWaking(false);
+      }
+    });
+
     return () => {
       cancelled = true;
     };

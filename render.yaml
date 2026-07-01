@@ -1,11 +1,10 @@
 services:
   - type: web
-    name: personal-ai-trainer-api
+    name: personal-ai-web
     runtime: docker
     plan: free
-    rootDir: apps/api
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /health
+    healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
@@ -31,20 +30,7 @@ services:
         value: https://wger.de
       - key: WGER_LANGUAGE_ID
         value: "7"
-
-  - type: web
-    name: personal-ai-web
-    runtime: node
-    plan: free
-    rootDir: apps/web
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-    autoDeploy: true
-    envVars:
+      - key: API_PROXY_URL
+        value: http://127.0.0.1:8000
       - key: NEXT_PUBLIC_API_URL
         value: /api
-      - key: API_PROXY_URL
-        fromService:
-          type: web
-          name: personal-ai-trainer-api
-          envVarKey: RENDER_EXTERNAL_URL

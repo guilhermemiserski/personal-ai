@@ -11,7 +11,7 @@ const HOP_BY_HOP_HEADERS = new Set([
   "upgrade",
 ]);
 
-const UPSTREAM_TIMEOUT_MS = 55_000;
+const UPSTREAM_TIMEOUT_MS = 25_000;
 
 function apiOrigin(): string {
   const configured = process.env.API_PROXY_URL?.trim();
@@ -23,7 +23,7 @@ function apiOrigin(): string {
 
 function proxyConfigError(): string | null {
   if (!process.env.API_PROXY_URL?.trim()) {
-    return "API_PROXY_URL não está definido no serviço web. Configure a URL pública da API (apps/api) no Render.";
+    return "API_PROXY_URL não está definido. Em produção use http://127.0.0.1:8000 (API no mesmo container).";
   }
   return null;
 }

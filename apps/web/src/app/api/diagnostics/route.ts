@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const UPSTREAM_TIMEOUT_MS = 55_000;
+const UPSTREAM_TIMEOUT_MS = 25_000;
 
 function apiOrigin(): string | null {
   const configured = process.env.API_PROXY_URL?.trim();
@@ -41,7 +41,7 @@ export async function GET(): Promise<NextResponse> {
       upstream_health: body,
       hint: trainerApi
         ? "API do Personal AI Trainer respondeu corretamente."
-        : "A URL da API não retornou /health com {status:'ok'}. Confirme que o serviço deployado é apps/api deste repositório.",
+        : "A URL da API não retornou /health com {status:'ok'}. Verifique DATABASE_URL e JWT_SECRET no serviço.",
     });
   } catch {
     return NextResponse.json(
