@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+const UPSTREAM_TIMEOUT_MS = 55_000;
+
 function apiOrigin(): string | null {
   const configured = process.env.API_PROXY_URL?.trim();
   if (!configured) {
@@ -20,8 +22,14 @@ export async function GET(): Promise<NextResponse> {
     );
   }
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+
   try {
-    const health = await fetch(`${origin}/health`, { cache: "no-store" });
+    const health = await fetch(`${origin}/health`, {
+      cache: "no-store",
+      signal: controller.signal,
+    });
     const body = (await health.json().catch(() => ({}))) as { status?: string };
     const trainerApi = health.ok && body.status === "ok";
 
@@ -32,16 +40,19 @@ export async function GET(): Promise<NextResponse> {
       upstream_health: body,
       hint: trainerApi
         ? "API do Personal AI Trainer respondeu corretamente."
-        : "A URL da API não retornou /health com {status:'ok'}. Confirme que o serviço deployado é apps/api deste repositório (não outro projeto com nome parecido).",
+        : "A URL da API não retornou /health com {status:'ok'}. Confirme que o serviço deployado é apps/api deste repositório.",
     });
   } catch {
     return NextResponse.json(
       {
         ok: false,
         api_proxy_url: origin,
-        detail: "Falha ao conectar na API upstream.",
+        detail:
+          "Falha ao conectar na API upstream. No plano gratuito do Render, o primeiro acesso pode levar até 1 minuto (cold start).",
       },
       { status: 503 },
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

@@ -11,6 +11,8 @@ const HOP_BY_HOP_HEADERS = new Set([
   "upgrade",
 ]);
 
+const UPSTREAM_TIMEOUT_MS = 55_000;
+
 function apiOrigin(): string {
   const configured = process.env.API_PROXY_URL?.trim();
   if (!configured) {
@@ -61,14 +63,22 @@ async function proxyRequest(
     init.body = await request.arrayBuffer();
   }
 
+  const upstreamController = new AbortController();
+  const upstreamTimeoutId = setTimeout(() => upstreamController.abort(), UPSTREAM_TIMEOUT_MS);
+
   let upstream: Response;
   try {
-    upstream = await fetch(targetUrl, init);
-  } catch {
+    upstream = await fetch(targetUrl, { ...init, signal: upstreamController.signal });
+  } catch (error) {
+    const isTimeout = error instanceof Error && error.name === "AbortError";
     return proxyFailureResponse(
       503,
-      "Não foi possível conectar à API. Verifique se o serviço da API está no ar e se API_PROXY_URL está correto.",
+      isTimeout
+        ? "A API demorou para responder (cold start no Render). Aguarde ~1 minuto e tente novamente."
+        : "Não foi possível conectar à API. Verifique se o serviço da API está no ar e se API_PROXY_URL está correto.",
     );
+  } finally {
+    clearTimeout(upstreamTimeoutId);
   }
 
   const responseHeaders = new Headers();
@@ -87,6 +97,7 @@ async function proxyRequest(
   });
 }
 
+export const runtime = "nodejs";
 export const GET = proxyRequest;
 export const POST = proxyRequest;
 export const PUT = proxyRequest;

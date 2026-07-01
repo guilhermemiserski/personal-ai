@@ -1,9 +1,10 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
+import { resolveApiUrl } from "@/lib/apiBase";
 import { markAuthenticated } from "@/lib/auth";
 import { AuthFooter, AuthShell } from "@/components/AuthShell";
 import { AuthPageSkeleton } from "@/components/skeleton";
@@ -14,6 +15,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [waking, setWaking] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${resolveApiUrl()}/health`, { credentials: "include" })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) {
+          setWaking(false);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -31,7 +47,7 @@ export default function LoginPage() {
     }
   }
 
-  if (loading) {
+  if (loading || waking) {
     return <AuthPageSkeleton />;
   }
 

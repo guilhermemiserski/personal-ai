@@ -27,12 +27,40 @@ export class ApiError extends Error {
 }
 
 const REQUEST_TIMEOUT_MS = 20_000;
+const COLD_START_STATUSES = new Set([502, 503, 504]);
+const COLD_START_MESSAGE =
+  "Servidor iniciando (plano gratuito do Render). Aguarde até 1 minuto e tente novamente.";
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 interface ApiRequestOptions extends RequestInit {
   timeoutMs?: number;
 }
 
 async function request<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await executeRequest<T>(path, options);
+    } catch (error) {
+      const shouldRetry =
+        error instanceof ApiError &&
+        COLD_START_STATUSES.has(error.status) &&
+        attempt < maxAttempts;
+      if (!shouldRetry) {
+        throw error;
+      }
+      await sleep(4_000 * attempt);
+    }
+  }
+
+  throw new ApiError(503, COLD_START_MESSAGE);
+}
+
+async function executeRequest<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(options.headers ?? {}),
@@ -61,9 +89,16 @@ async function request<T>(path: string, options: ApiRequestOptions = {}): Promis
     clearTimeout(timeoutId);
   }
   if (!response.ok) {
-    const body = (await response.json().catch(() => ({}))) as {
-      detail?: string | Array<{ msg?: string }>;
-    };
+    if (COLD_START_STATUSES.has(response.status)) {
+      throw new ApiError(response.status, COLD_START_MESSAGE);
+    }
+
+    const contentType = response.headers.get("content-type") ?? "";
+    const body = contentType.includes("application/json")
+      ? ((await response.json().catch(() => ({}))) as {
+          detail?: string | Array<{ msg?: string }>;
+        })
+      : {};
     let detail = "Erro na requisição";
     if (typeof body.detail === "string") {
       detail = body.detail;

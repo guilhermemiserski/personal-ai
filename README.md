@@ -81,13 +81,14 @@ Abra [http://localhost:3000](http://localhost:3000).
    - `API_PROXY_URL` = URL pública do serviço **trainer** (ex. `https://personal-ai-trainer-api.onrender.com`)
 5. Valide:
    - API: `GET /health` retorna `{"status":"ok"}`
-   - Web: `GET /api/_proxy/status` retorna `"ok": true`
+   - Web: `GET /api/diagnostics` retorna `"ok": true`
    - Web: registro/login, onboarding e geração de treino.
 
 #### Erro 502 no login
 
 - **Causa comum:** `API_PROXY_URL` ausente no web → o proxy tenta `127.0.0.1:8000` dentro do container.
-- **Outra causa:** `API_PROXY_URL` aponta para a API errada (sem `/auth/login`). Confira `GET https://SEU-WEB.onrender.com/api/_proxy/status`.
+- **Outra causa:** `API_PROXY_URL` aponta para a API errada (sem `/auth/login`). Confira `GET https://SEU-WEB.onrender.com/api/diagnostics`.
+- **Cold start (plano free):** o primeiro acesso após inatividade pode levar ~1 minuto. A tela de login já tenta acordar a API automaticamente.
 
 ### Opção 2: Vercel (Web) + Render/Railway (API)
 
